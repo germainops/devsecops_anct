@@ -26,6 +26,7 @@ jobs:
   security_check:
     name: Security check with Trivy
     runs-on: ubuntu-latest
+    needs: compile
 
     steps:
     - name: Checkout the Project
