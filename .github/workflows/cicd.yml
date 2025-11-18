@@ -5,6 +5,7 @@ on:
     branches: [ "main" ]
 
 jobs:
+  # Compile the project Job
   compile:
     name: Compile the project
     runs-on: self-hosted
@@ -26,6 +27,7 @@ jobs:
     - name: Build with Maven
       run: mvn compile
 
+  # Security Chekc with Trivy and Gitleaks Job
   security_check:
     name: Security check with Trivy
     runs-on: self-hosted
@@ -53,7 +55,7 @@ jobs:
     - name: Scan the code with Gitleaks
       run: gitleaks detect source . -r gitleaks-report.json 
 
-
+  # Test Unit Cases Job
   test:
     name: Test Unit Cases 
     runs-on: self-hosted
@@ -72,9 +74,11 @@ jobs:
      - name: Run Unit Test Cases
        run: mvn test
 
+  # SonarQube Scan Job
   sonar_scan:
     name: SOnarQube Scan
     runs-on: self-hosted
+    needs: test
 
     steps: 
     - name: Checkout the project
@@ -89,19 +93,23 @@ jobs:
     - name: Build Project
       run: mvn package
 
+    - name: Upload JAR Artifact
+      uses: actions/checkout-artifact@v4
+      with: 
+        name: app-jar
+        path: target/*.jar
+
     - name: Checkout the project once again
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
-    # SonarQube Scan
     - name: SonarQube Scan
       uses: SonarSource/sonarqube-scan-action@v5.0.0
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
-    # SonarQube Quality Gate Check
     - name: SonarQube Quality Gate Check
       uses: sonarsource/sonarqube-quality-gate-action@master
       with:
@@ -109,6 +117,43 @@ jobs:
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+
+  # Build and Push the Docker Image Job
+  build-docker-image:
+    name: Docker Image
+    runs-on: self-hosted
+    needs: sonar_scan
+
+    steps: 
+    - name: Checkout the project
+      uses: actions/checkout@v4
+  
+    - name: Download JAR Artifact
+      uses: actions/download-artifact@v4
+      with: 
+        name: app-jar
+        path: app
+        
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        tags: germain/gc-bank:latest
+      
+
+    
       
 
       
