@@ -132,24 +132,31 @@ jobs:
       uses: actions/download-artifact@v4
       with: 
         name: app-jar
-        path: target 
+        path: target
   
-    - name: Verify JAR file exists
-      run: ls -la target/
-
+    - name: Debug Docker Hub credentials
+      run: |
+        echo "=== Docker Hub Credentials Debug ==="
+        echo "Username: ${{ vars.DOCKERHUB_USERNAME }}"
+        echo "Token first 10 chars: ${DOCKERHUB_TOKEN:0:10}..."
+        echo "Token length: ${#DOCKERHUB_TOKEN}"
+  
     - name: Test Docker Hub login manually
       run: |
+        echo "=== Testing Docker Hub Login ==="
         echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ vars.DOCKERHUB_USERNAME }}" --password-stdin
+        echo "Login exit code: $?"
+        
+    - name: Check if repository exists
+      run: |
+        echo "=== Checking Repository Access ==="
+        docker pull germainops/bankapp:latest && echo "Repository exists" || echo "Repository doesn't exist or no access"
   
     - name: Login to Docker Hub
       uses: docker/login-action@v3
       with:
         username: ${{ vars.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        logout: false
-          
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
   
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -160,7 +167,6 @@ jobs:
         context: .
         push: true
         tags: germainops/bankapp:latest
-        no-cache: true
         
 
     
