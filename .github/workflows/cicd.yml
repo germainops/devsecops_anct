@@ -142,6 +142,7 @@ jobs:
       with:
         username: ${{ vars.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+        logout: false
           
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v3
@@ -155,6 +156,8 @@ jobs:
         context: .
         push: true
         tags: germainops/bankapp:latest
+        cache-from: type=registry,ref=germainops/bankapp:latest
+        cache-to: type=inline
       
 
     
