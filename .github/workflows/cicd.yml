@@ -167,8 +167,8 @@ jobs:
         context: .
         push: true
         tags: |
-          germainops/bankapp:latest
-          germainops/bankapp:${{ github.sha }}
+          0geek/bankapp:latest
+          0geek/bankapp:${{ github.sha }}
         
 
     
