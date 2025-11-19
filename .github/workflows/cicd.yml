@@ -136,6 +136,10 @@ jobs:
   
     - name: Verify JAR file exists
       run: ls -la target/
+
+    - name: Test Docker Hub login manually
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ vars.DOCKERHUB_USERNAME }}" --password-stdin
   
     - name: Login to Docker Hub
       uses: docker/login-action@v3
@@ -156,9 +160,8 @@ jobs:
         context: .
         push: true
         tags: germainops/bankapp:latest
-        cache-from: type=registry,ref=germainops/bankapp:latest
-        cache-to: type=inline
-      
+        no-cache: true
+        
 
     
       
